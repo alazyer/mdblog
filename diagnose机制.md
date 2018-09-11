@@ -9,7 +9,7 @@
 - HealthChecker，所有检查的入口，可以添加Component
 - HealthReport，所有报告的入口，可以添加ComponentReport
 - Component，所有需要进行检查的组件，需要实现了Diagnose方法，返回ComponentReport
-- Report，Component的Diagnose方法返回结果，包含：status、name、message、suggestion和latency信息
+- ComponentReport，Component的Diagnose方法返回结果，包含：status、name、message、suggestion和latency信息
 
 
 

@@ -71,3 +71,49 @@ $ go run main.go
 $ go run main.go version
 ```
 
+## Flags
+
+flags分两种：
+
+- persistent flag: 定义该flag的Command和其子孙Command都可以用
+- local flag: 只有定义该flag的Command可用
+
+```go
+// persistent flag
+rootCmd.PersistentFlags().BoolVarP(&Verbose, "verbose", "v", false, "verbose output")
+
+// local flag
+rootCmd.Flags().StringVarP(&Source, "source", "s", "", "Source directory to read from")
+```
+
+进一步的，可以将`cobra`和`viper`一起使用
+
+```go
+var author string
+
+func init() {
+  rootCmd.PersistentFlags().StringVar(&author, "author", "YOUR NAME", "Author name for copyright attribution")
+  viper.BindPFlag("author", rootCmd.PersistentFlags().Lookup("author"))
+}
+```
+
+flag默认是可选的，要想让某个flag必填的话，需要调用`Command.MarkFlagRequired`或者`Command.MarkPersistentFlagRequired`
+
+```
+rootCmd.Flags().StringVarP(&Region, "region", "r", "", "AWS region (required)")
+rootCmd.MarkFlagRequired("region")
+```
+
+## Hooks
+
+在执行主要的`Run`方法前后，`Command`会依次调用预先定义的方法：
+
+1. `PersistentPreRun`
+2. `PreRun`
+3. `Run`
+4. `PostRun`
+5. `PersistentPostRun`
+
+加了`Persistent`前缀的同flag类似，同样会作用到子孙Command上（如果子孙Command没有定义自己的`Persistent`前缀方法的话，如果定义了，则不会执行父Command的`Persistent`前缀方法，而是执行自己的）
+
+PS: 与上述方法对应的，还有一个`[XX]E`方法，比如`RunE`这个方法与`Run`方法的区别在于会有一个error类型的返回值；如果声明了`[XX]E`那么一般不会再声明`[XX]`，因为声明了也会在`Command.execute`方法中因为声明了`[XX]E`方法而被忽略掉

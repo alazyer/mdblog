@@ -110,7 +110,46 @@ viper.GetBool("verbose")
 
 
 
-### 通过Flag或者key/value仓库获取
+### 通过Flag实现从命令行参数获取配置项值
+
+```go
+package main
+
+import (
+	"flag"
+	"github.com/spf13/pflag"
+)
+
+func main() {
+
+	// using standard library "flag" package
+	flag.Int("flagname", 1234, "help message for flagname")
+
+	pflag.CommandLine.AddGoFlagSet(flag.CommandLine)
+	pflag.Parse()
+	viper.BindPFlags(pflag.CommandLine)
+
+	i := viper.GetInt("flagname") // retrieve value from viper
+
+	...
+}
+```
+
+进一步和`cobra`的Command声明的flag一起使用
+
+```go
+var author string
+
+func init() {
+  rootCmd.PersistentFlags().StringVar(&author, "author", "YOUR NAME", "Author name for copyright attribution")
+  viper.BindPFlag("author", rootCmd.PersistentFlags().Lookup("author"))
+}
+
+// some other place
+viper.GetString("author")
+```
+
+## 通过key/value仓库获取
 
 TODO
 

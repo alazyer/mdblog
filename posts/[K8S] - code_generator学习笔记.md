@@ -10,6 +10,7 @@
 - deepcopy-gen
 - Informer-gen
 - lister-gen
+- defaulter-gen
 
 
 
@@ -138,6 +139,68 @@ github.com/alazyer/gocodes/examples/code-generator/sample-controller/pkg/apis \
             │   └── v1alpha1
             └── samplecontroller
                 └── v1alpha1
+```
+
+## defaulter-gen
+
+### 添加tag
+
+```
+# doc.go中添加
+
+// +k8s:defaulter-gen=TypeMeta
+```
+
+### 编写defaulter函数
+
+```
+# defaults.go
+
+package v1alpha1
+
+import (
+	"k8s.io/apimachinery/pkg/runtime"
+)
+
+func addDefaultingFuncs(scheme *runtime.Scheme) error {
+	return RegisterDefaults(scheme)
+}
+
+func SetDefaults_FooStatus(obj *FooStatus) {
+	if obj.AvailableReplicas != 0 {
+		obj.AvailableReplicas = 0
+	}
+}
+```
+
+其中addDefaultingFuncs中调用的RegisterDefaults方法是通过有defaulter-gen生成的
+
+### 生成文件
+
+`defaulter-gen -i github.com/alazyer/gocodes/examples/code-generator/sample-controller/pkg/apis/auth/v1alpha1 -p github.com/alazyer/gocodes/examples/code-generator/sample-controller/pkg/apis/auth/v1alpha1`
+
+生成的文件为`zz_generated.defaults.go`
+
+### 注册
+
+```go
+// https://github.com/kubernetes/kubernetes/blob/6f897af2da/staging/src/k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1/register.go
+
+package v1alpha1
+
+import (
+	"k8s.io/apimachinery/pkg/runtime"
+)
+
+var (
+	SchemeBuilder      = runtime.NewSchemeBuilder(addDefaultingFuncs)
+	localSchemeBuilder = &SchemeBuilder
+	AddToScheme        = localSchemeBuilder.AddToScheme
+)
+
+func init() {
+	localSchemeBuilder.Register(addDefaultingFuncs)
+}
 ```
 
 
